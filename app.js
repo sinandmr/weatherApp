@@ -26,6 +26,21 @@ async function fetchData(city) {
       weatherInfo.textContent = info.weather[0].description;
       cloudImage.src = `src/png/${info.weather[0].main}.png`;
     });
+
+  const getInfo = await fetch(
+    `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&appid=${apiKey}`
+  )
+    .then(res => res.json())
+    .then(info => {
+      days.forEach((day, index) => {
+        day.querySelector(
+          '.day-photo'
+        ).src = `src/png/${info.daily[index].weather[0].main}.png`;
+        day.querySelector('.day-temp').textContent = `${kelvintoCelsius(
+          info.daily[index].temp.min
+        )}/${kelvintoCelsius(info.daily[index].temp.max)}`;
+      });
+    });
 }
 searchBtn.addEventListener('click', e => {
   e.preventDefault();
