@@ -12,42 +12,68 @@ function kelvintoCelsius(kelvin) {
   return Math.floor(kelvin - 273);
 }
 
-async function fetchData(city) {
-  let lat, lon;
-  const currentDay = await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
-  )
-    .then(res => res.json())
-    .then(info => {
-      lat = info.coord.lat;
-      lon = info.coord.lon;
-      cityName.textContent = info.name;
-      tempText.textContent = kelvintoCelsius(info.main.temp) + '°C';
-      weatherInfo.textContent = info.weather[0].description;
-      cloudImage.src = `src/png/${info.weather[0].main}.png`;
-    });
+// Find user location
+navigator.geolocation.getCurrentPosition(function (position) {
+  let lat = position.coords.latitude.toFixed(4);
+  let lon = position.coords.longitude.toFixed(4);
+  getUserWeatherData(lat, lon);
+  fetchLocationName(lat, lon);
+});
 
-  const getInfo = await fetch(
+async function getUserWeatherData(lat, lon) {
+  const data = await fetch(
     `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly&appid=${apiKey}`
   )
     .then(res => res.json())
-    .then(info => {
+    .then(data => {
+      // Current day data
+      tempText.textContent = kelvintoCelsius(data.current.temp) + '°C';
+      weatherInfo.textContent = data.current.weather[0].description;
+      cloudImage.src = `src/png/${data.current.weather[0].main}.png`;
+
+      // Week data
       days.forEach((day, index) => {
         day.querySelector(
           '.day-photo'
-        ).src = `src/png/${info.daily[index].weather[0].main}.png`;
+        ).src = `src/png/${data.daily[index].weather[0].main}.png`;
         day.querySelector('.day-temp').textContent = `${kelvintoCelsius(
-          info.daily[index].temp.min
-        )}/${kelvintoCelsius(info.daily[index].temp.max)}`;
+          data.daily[index].temp.min
+        )}/${kelvintoCelsius(data.daily[index].temp.max)}`;
       });
     });
 }
+
+const fetchLocationName = async (lat, lon) => {
+  await fetch(
+    `https://www.mapquestapi.com/geocoding/v1/reverse?key=${mapQuestApi}&location=${lat}%2C${lon}&outFormat=json&thumbMaps=false`
+  )
+    .then(res => res.json())
+    .then(data => {
+      cityName.textContent = data.results[0].locations[0].adminArea5;
+    });
+};
+
+// if a query is made with the entered data, these parts will work.
+const getCityLocation = city => {
+  return fetch(
+    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
+  )
+    .then(res => res.json())
+    .then(data => {
+      cityName.textContent = data.name;
+      getUserWeatherData(data.coord.lat, data.coord.lon);
+    });
+};
+
 searchBtn.addEventListener('click', e => {
   e.preventDefault();
-  fetchData(searchInput.value);
+  getCityLocation(searchInput.value);
+  searchInput.value = '';
 });
+
 window.addEventListener('keypress', e => {
   if (e.key === 'Enter') {
-    fetchData(searchInput.value);
+    getCityLocation(searchInput.value);
+    searchInput.value = '';
   }
 });
