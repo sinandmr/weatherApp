@@ -5,8 +5,9 @@ const tempText = document.querySelector('.temp-info');
 const cloudImage = document.querySelector('.weather-image');
 const weatherInfo = document.querySelector('.weather-info');
 const cityName = document.querySelector('.city-info');
-const apiKey = '41359b20d208e746135272a023315b3b';
 const days = document.querySelectorAll('.day');
+const apiKey = '41359b20d208e746135272a023315b3b';
+const mapQuestApi = '0GFSzUqYyDGxSJA7PHmmLeC9I4y2nzML';
 
 function kelvintoCelsius(kelvin) {
   return Math.floor(kelvin - 273);
